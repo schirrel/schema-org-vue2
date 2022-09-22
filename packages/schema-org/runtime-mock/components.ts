@@ -1,4 +1,4 @@
-import { defineComponent, h } from 'vue'
+import { defineComponent } from '../vue'
 
 export function defineSchemaOrgComponent(name: string) {
   return defineComponent({
@@ -6,17 +6,11 @@ export function defineSchemaOrgComponent(name: string) {
     props: {
       as: String,
     },
-    setup(props, { slots, attrs }) {
-      return () => {
-        // renderless component
-        if (!slots.default)
-          return null
-        const childSlots = []
-        if (slots.default)
-          childSlots.push(slots.default(attrs))
-        return h(props.as || 'div', {}, childSlots)
-      }
-    },
+    template: `
+        <component :is='componentType'>
+            <slot v-bind="{ $attrs }"/>
+        </component>
+        `,
   })
 }
 
