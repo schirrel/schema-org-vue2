@@ -1,5 +1,3 @@
-import type { App, ComputedRef, Ref } from 'vue'
-import { computed, ref } from 'vue'
 import type {
   MetaInput,
   SchemaOrgContext,
@@ -22,7 +20,7 @@ export interface CreateSchemaOrgInput {
   /**
    * Client used to write schema to the document.
    */
-  updateHead: (fn: ComputedRef) => void | Promise<void>
+  updateHead: (fn: any) => void | Promise<void>
 }
 
 export interface SchemaOrgVuePlugin {
@@ -31,7 +29,7 @@ export interface SchemaOrgVuePlugin {
    *
    * @param app
    */
-  install: (app: App) => void
+  install: (app: any) => void
   /**
    * Given a Vue component context, deleted any nodes associated with it.
    */
@@ -43,7 +41,7 @@ export interface SchemaOrgVuePlugin {
   /**
    * Trigger the schemaRef to be updated.
    */
-  generateSchema: () => Promise<Ref<string>> | Ref<string>
+  generateSchema: () => Promise<any>
   /**
    * Force Schema.org to be refreshed in the DOM.
    */
@@ -61,7 +59,7 @@ export interface SchemaOrgVuePlugin {
 export const createSchemaOrg = (options: CreateSchemaOrgInput) => {
   if (!options.position)
     options.position = 'body'
-  const schemaRef = ref<string>('')
+  let schemaRef = ''
 
   let ctx = createSchemaOrgGraph()
 
@@ -83,7 +81,7 @@ export const createSchemaOrg = (options: CreateSchemaOrgInput) => {
     },
 
     async generateSchema() {
-      schemaRef.value = await resolveGraphNodesToHtml()
+      schemaRef = await resolveGraphNodesToHtml()
       return schemaRef
     },
 
@@ -100,12 +98,12 @@ export const createSchemaOrg = (options: CreateSchemaOrgInput) => {
     },
 
     setupDOM() {
-      return options.updateHead(computed(() => {
+      return options.updateHead(() => {
         const script: any = {
           'type': 'application/ld+json',
           'data-id': 'schema-org-graph',
           'key': 'schema-org-graph',
-          'children': schemaRef.value,
+          'children': schemaRef,
         }
         if (options.position === 'body')
           script.body = true
@@ -115,7 +113,7 @@ export const createSchemaOrg = (options: CreateSchemaOrgInput) => {
             script,
           ],
         }
-      }))
+      })
     },
   }
   return client
