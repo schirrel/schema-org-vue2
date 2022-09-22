@@ -1,6 +1,5 @@
-import { computed, defineComponent, h, ref, unref } from 'vue'
-// @ts-expect-error runtime
-import { useSchemaOrg } from '../composables/useSchemaOrg.mjs'
+import { defineComponent } from '../../vue'
+import { useSchemaOrg } from '../composables/useSchemaOrg'
 import {
   defineArticle,
   defineBook, defineBreadcrumb,
@@ -20,8 +19,7 @@ import {
   defineWebPage,
   defineWebSite,
 }
-  // @ts-expect-error runtime
-  from '../provider.mjs'
+  from '../provider'
 
 const shallowVNodesToText = (nodes: any) => {
   let text = ''
@@ -52,50 +50,52 @@ const ignoreKey = (s: string) => {
 export const defineSchemaOrgComponent = (name: string, defineFn: (input: any) => any) => {
   return defineComponent({
     name,
+    data() {
+      return {
+        node: null,
+      }
+    },
     props: {
       as: String,
     },
-    setup(props, { slots, attrs }) {
-      const node = ref(null)
-
-      const nodePartial = computed(() => {
+    computed: {
+      componentType(): string {
+        return (this as any).as || 'div'
+      },
+      nodePartial() {
         const val: Record<string, any> = {}
-        Object.entries(unref(attrs)).forEach(([key, value]) => {
+        Object.entries((this as any).$attrs).forEach(([key, value]) => {
           if (!ignoreKey(key)) {
             // keys may be passed with kebab case, and they aren't transformed
-            val[fixKey(key)] = unref(value)
+            val[fixKey(key)] = value
           }
         })
         // only render vnodes while we don't have a node
-        if (!node.value) {
+        if (!(this as any).node) {
           // iterate through slots
-          for (const [key, slot] of Object.entries(slots)) {
+          for (const [key, slot] of Object.entries((this as any).$slots)) {
             if (!slot || key === 'default')
               continue
             // allow users to provide data via slots that aren't rendered
-            val[fixKey(key)] = shallowVNodesToText(slot(props))
+            val[fixKey(key)] = shallowVNodesToText((this as any).$slots((this as any).props))
           }
         }
         return val
-      })
+      }
+    },
+    mounted() {
 
       // may not be available
       if (defineFn) {
         // register via main schema composable for route watching
-        useSchemaOrg([defineFn(unref(nodePartial))])
-      }
-
-      return () => {
-        const data = unref(nodePartial)
-        // renderless component
-        if (!slots.default)
-          return null
-        const childSlots = []
-        if (slots.default)
-          childSlots.push(slots.default(data))
-        return h(props.as || 'div', {}, childSlots)
+        useSchemaOrg(this, [defineFn(this.nodePartial)])
       }
     },
+    template: `
+        <component :is='componentType'>
+            <slot v-bind="nodePartial"/>
+        </component>
+        `,
   })
 }
 

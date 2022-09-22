@@ -1,4 +1,3 @@
-import { getCurrentInstance, nextTick, onBeforeUnmount, onMounted, watch } from 'vue'
 import type { SchemaOrgVuePlugin } from '@vueuse/schema-org'
 // @ts-expect-error runtime
 import { injectSchemaOrg } from '../../index.mjs'
@@ -7,7 +6,7 @@ type Arrayable<T> = T | Array<T>
 
 let vmGlobalUid = -1
 
-export function useSchemaOrg(input?: Arrayable<any>) {
+export function useSchemaOrg(instance: any, input?: Arrayable<any>) {
   // malformed
   if (!input)
     return
@@ -16,7 +15,7 @@ export function useSchemaOrg(input?: Arrayable<any>) {
   if (!client)
     return
 
-  const vm = getCurrentInstance()
+  const vm = instance
   const vmUid = vm?.uid || ++vmGlobalUid
   // try and set the appropriate context ID, so we can dedupe and cleanup
   client.ctx._ctxUid = vmUid
@@ -25,8 +24,8 @@ export function useSchemaOrg(input?: Arrayable<any>) {
 
   // SSR Mode does not need to do anything else.
   if (typeof window === 'undefined') {
-    nextTick(() => {
-      watch(() => input, async () => {
+    instance.$nextTick(() => {
+      instance.watch(() => input, async () => {
         await client.forceRefresh()
       }, {
         immediate: true,
@@ -36,7 +35,7 @@ export function useSchemaOrg(input?: Arrayable<any>) {
     return
   }
 
-  const stopWatcher = watch(() => input, () => {
+  const stopWatcher = instance.watch(() => input, () => {
     client.generateSchema()
   }, {
     deep: true,
@@ -45,11 +44,11 @@ export function useSchemaOrg(input?: Arrayable<any>) {
   // @todo initial state will be correct from server, only need to watch for route changes to re-compute
 
   // CSR Mode will need to manually trigger the schema to re-generate
-  onMounted(() => {
+  instance.mounted(() => {
     client.forceRefresh()
   })
 
-  onBeforeUnmount(() => {
+  instance.beforeUnmount(() => {
     client.removeContext(vmUid)
     client.generateSchema()
     stopWatcher()

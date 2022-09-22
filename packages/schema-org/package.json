@@ -61,25 +61,6 @@
   "main": "dist/index.cjs",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "runtime": [
-        "dist/runtime-simple/index.d.ts"
-      ],
-      "runtime-simple": [
-        "dist/runtime-simple/index.d.ts"
-      ],
-      "runtime-schema-dts": [
-        "dist/runtime-schema-dts/index.d.ts"
-      ],
-      "vite": [
-        "dist/vite.d.ts"
-      ],
-      "webpack": [
-        "dist/webpack.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist"
   ],
@@ -91,7 +72,7 @@
     "stub": "unbuild . --stub"
   },
   "peerDependencies": {
-    "vue": ">=3.2.0"
+    "vue": "2.6.12"
   },
   "dependencies": {
     "@rollup/pluginutils": "^4.2.1",
@@ -108,6 +89,6 @@
     "@types/fs-extra": "^9.0.13",
     "fs-extra": "^10.1.0",
     "unplugin-vue-components": "^0.22.4",
-    "vue": "^3.2.37"
+    "vue": "2.6.12"
   }
 }
